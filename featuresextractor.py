@@ -152,22 +152,36 @@ class FeaturesExtractor:
 
 if __name__ == '__main__':
     car = cv2.cvtColor(cv2.imread('./training_data/vehicles/KITTI_extracted/348.png'), cv2.COLOR_BGR2LUV)
-    cv2.imshow('Car', cv2.cvtColor(cv2.resize(car, (0, 0), fx=4, fy=4), cv2.COLOR_LUV2BGR))
+    hog_car = cv2.cvtColor(cv2.resize(car, (0, 0), fx=2, fy=2), cv2.COLOR_LUV2BGR)
     features, hog_image_car = FeaturesExtractor().get_hog_features(car[:,:,0], visualise=True)
-    cv2.imshow('Hog Car - Channel L', cv2.resize(hog_image_car, (0, 0), fx=4, fy=4))
+    hog_car_l = cv2.resize(hog_image_car, (0, 0), fx=2, fy=2)
     features, hog_image_car = FeaturesExtractor().get_hog_features(car[:,:,1], visualise=True)
-    cv2.imshow('Hog Car - Channel U', cv2.resize(hog_image_car, (0, 0), fx=4, fy=4))
+    hog_car_u = cv2.resize(hog_image_car, (0, 0), fx=2, fy=2)
     features, hog_image_car = FeaturesExtractor().get_hog_features(car[:,:,2], visualise=True)
-    cv2.imshow('Hog Car - Channel V', cv2.resize(hog_image_car, (0, 0), fx=4, fy=4))
+    hog_car_v = cv2.resize(hog_image_car, (0, 0), fx=2, fy=2)
 
     notcar = cv2.cvtColor(cv2.imread('./training_data/non-vehicles/Extras/extra177.png'), cv2.COLOR_BGR2LUV)
-    cv2.imshow('Not Car', cv2.cvtColor(cv2.resize(notcar, (0, 0), fx=4, fy=4), cv2.COLOR_LUV2BGR))
+    hog_not_car = cv2.cvtColor(cv2.resize(notcar, (0, 0), fx=2, fy=2), cv2.COLOR_LUV2BGR)
     features, hog_image_notcar = FeaturesExtractor().get_hog_features(notcar[:,:,0], visualise=True)
-    cv2.imshow('Hog Not Car - Channel L', cv2.resize(hog_image_notcar, (0, 0), fx=4, fy=4))
+    hog_not_car_l = cv2.resize(hog_image_notcar, (0, 0), fx=2, fy=2)
     features, hog_image_notcar = FeaturesExtractor().get_hog_features(notcar[:,:,1], visualise=True)
-    cv2.imshow('Hog Not Car - Channel U', cv2.resize(hog_image_notcar, (0, 0), fx=4, fy=4))
+    hog_not_car_u = cv2.resize(hog_image_notcar, (0, 0), fx=2, fy=2)
     features, hog_image_notcar = FeaturesExtractor().get_hog_features(notcar[:,:,2], visualise=True)
-    cv2.imshow('Hog Not Car - Channel V', cv2.resize(hog_image_notcar, (0, 0), fx=4, fy=4))
+    hog_not_car_v = cv2.resize(hog_image_notcar, (0, 0), fx=2, fy=2)
+
+    hog_example = np.ones((612, 612, 3))
+    y_offs = 20
+    x_off = 20
+    hog_example[y_offs:y_offs + hog_car.shape[0], x_off:x_off + hog_car.shape[1],:] = hog_car
+    x_off += hog_car.shape[0] + 20
+    hog_example[y_offs:y_offs + hog_car_l.shape[0], x_off:x_off + hog_car_l.shape[1],:] = np.dstack((hog_car_l, hog_car_l, hog_car_l))
+    x_off += hog_car_l.shape[0] + 20
+    hog_example[y_offs:y_offs + hog_car_u.shape[0], x_off:x_off + hog_car_u.shape[1],:] = np.dstack((hog_car_u, hog_car_u, hog_car_u))
+    x_off += hog_car_u.shape[0] + 20
+    hog_example[y_offs:y_offs + hog_car_v.shape[0], x_off:x_off + hog_car_v.shape[1],:] = np.dstack((hog_car_v, hog_car_v, hog_car_v))
+    x_off += hog_car_v.shape[0] + 20
+
+    cv2.imshow('Hog', hog_example)
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()

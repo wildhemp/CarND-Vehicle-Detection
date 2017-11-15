@@ -13,15 +13,13 @@ import time
 from collections import deque
 from featuresextractor import FeaturesExtractor
 
+frame_id=0
 
-def find_vehicles(image, window_slider, features_extractor, scaler, model, debug_text=False):
+def find_vehicles(image, window_slider, features_extractor, scaler, model, debug_text=False,
+                  save_boxes_in_x_range=(0, 600)):
     start_time = time.time()
     luv = cv2.cvtColor(image, cv2.COLOR_BGR2LUV)
-    # windows = window_slider.slide_windows()
-    # features = features_extractor.extract_image_features_with_windows(luv, windows)
     features, windows = features_extractor.extract_image_features_multiscale(luv)
-    # windows = [((849, 392), (947, 490))]
-    # features = features_extractor.extract_image_features_with_windows_slow(luv, windows)
 
     end_time = time.time()
     if debug_text:
@@ -45,6 +43,15 @@ def find_vehicles(image, window_slider, features_extractor, scaler, model, debug
             car_windows.append(window)
             car_score.append((predictions[i][1] - min_prob) * score_mul + 1)
 
+            if save_boxes_in_x_range is not None and \
+                save_boxes_in_x_range[0] < window[0][0] < save_boxes_in_x_range[1]:
+                global frame_id
+                frame_id += 1
+                cv2.imwrite('training_data/non-vehicles/negative-samples/%dx'%frame_id + 'x'.join(
+                    str(e) for e in np.array(window).flatten()) + '.png',
+                    cv2.resize(image[window[0][1]:window[1][1], window[0][0]:window[1][0],:], (64, 64)))
+
+
     return car_windows, car_score
 
 
@@ -60,7 +67,7 @@ def calculate_bounding_boxes(thres_heatmap):
     if len(nonzero_vals) == 0:
         return []
 
-    median = np.percentile(nonzero_vals, 25)
+    median = np.percentile(nonzero_vals, 10)
     thres_heatmap = threshold(thres_heatmap, median)
     labels = label(thres_heatmap)
     cars_bboxes = []
@@ -73,7 +80,7 @@ def calculate_bounding_boxes(thres_heatmap):
         nonzerox = np.array(nonzero[1])
 
         box = ((np.min(nonzerox), np.min(nonzeroy)), (np.max(nonzerox), np.max(nonzeroy)))
-        if hw_ratio < (box[1][0] - box[0][0]) / (box[1][1] - box[0][1]) < 7/4:
+        if hw_ratio < (box[1][0] - box[0][0]) / (box[1][1] - box[0][1]):
             cars_bboxes.append(box)
 
     return cars_bboxes
