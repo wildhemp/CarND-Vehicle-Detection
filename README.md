@@ -82,12 +82,6 @@ Ultimately I searched on 6 scales using LUV 3-channel HOG features plus spatiall
 
 ![alt text][bounding_box_image]
 
-
-
-------
-
-
-
 ### Video Implementation
 
 ####1. Final video
