@@ -1,4 +1,4 @@
-**Vehicle Detection Project**
+#**Vehicle Detection Project**
 
 [//]: # "Image References"
 [image1]: ./examples/car_not_car.png
@@ -9,6 +9,8 @@
 [video_image]: ./examples/video_image.jpg
 [image7]: ./examples/output_bboxes.png
 [video1]: ./project_video.mp4
+
+## Rubric points
 
 ###Histogram of Oriented Gradients (HOG)
 
