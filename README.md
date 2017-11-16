@@ -1,4 +1,4 @@
-#**Vehicle Detection Project**
+# **Vehicle Detection Project**
 
 [//]: # "Image References"
 [image1]: ./examples/car_not_car.png
@@ -12,9 +12,9 @@
 
 ## Rubric points
 
-###Histogram of Oriented Gradients (HOG)
+### Histogram of Oriented Gradients (HOG)
 
-####1. Extracting HOG features from training images
+#### 1. Extracting HOG features from training images
 
 Extracting all features are to be found in `featuresextractor.py`. Specifically HOG is done between lines #32 and #54.   
 
@@ -25,7 +25,7 @@ Here is an example using the `LUV` color space and HOG parameters of `orientatio
 
 ![alt text][hog_image1]
 
-####2. Choice of HOG parameters
+#### 2. Choice of HOG parameters
 
 When choosing the HOG parameters I tried to balance speed of the feature generation, the overlap possible when doing hog sub-sampling, and also the prediction accuracy of the models. I.e. choosing pixel per cells below 8 (e.g. 4) would increase the features extraction time by a lot wouldn't really change the prediction accuracy, and even though it's possible to have a higher percentage overlap between search windows, it won't really help the detection much.
 
@@ -39,7 +39,7 @@ Using HOG alone made the model have an accuracy of ~98%. That's already quite go
 
 The code for extracting these features can be found in the `featuredextractor.py` between line #21 and #30
 
-####4. Training the classifier
+#### 4. Training the classifier
 
 Training the classifier is done in `train.py`, lines #40 to #93. The steps of these are:
 
@@ -56,9 +56,9 @@ Although some of the images contain time series data, and doing a random split c
 
 LogisticRegression has been chosen instead of LinearSVM, because they are very similar, but LogisticRegression uses log loss function and also reports proper probabilities, which I found working with easier. Further, based on my tests the accuracy of the two models are very close to each other.
 
-###Sliding Window Search
+### Sliding Window Search
 
-####1. Sliding windows vs HOG sub-sampling
+#### 1. Sliding windows vs HOG sub-sampling
 
 I tried 3 different approaches with sliding window search.
 
@@ -76,7 +76,7 @@ The window scales have been decided by trying a multitude of them. Originally I 
 
 The exact scales were chosen, so that it's a little easier to debug the process in some sense. Also the scale of 1/.65 is used with 2 different regions for better detection (i.e. it would totally miss the white car on some images, once it's a bit farther, and no other scales would find it either). This admittedly is a little bit of a hack, but works well enough.
 
-####2. Finding windows with cars
+#### 2. Finding windows with cars
 
 Ultimately I searched on 6 scales using LUV 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result.  Here are some example images:
 
@@ -86,14 +86,14 @@ Ultimately I searched on 6 scales using LUV 3-channel HOG features plus spatiall
 
 ### Video Implementation
 
-####1. Final video
+#### 1. Final video
 
 Processing images for the video is done in `vehicles.py` lines #190 to #237
 
 Here's a [link to my video result](./project_video.mp4)
 
 
-####2. Calculating bounding boxes
+#### 2. Calculating bounding boxes
 
 From the positive window detections (done in `vehicles.py` lines #19 to #75) I created a heatmap, using the scores returned. I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected (`vehicles.py` lines #78 to #114)
 
@@ -122,9 +122,9 @@ This also includes the in a pip style the detections, the original heatmap and t
 
 ---
 
-###Discussion
+### Discussion
 
-####1. HOG subsampling missing cars
+#### 1. HOG subsampling missing cars
 
 HOG sub-sampling doesn't always perform well, because based on what's the area of the HOG sub-sampling might miss cars.
 
