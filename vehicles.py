@@ -15,8 +15,29 @@ from featuresextractor import FeaturesExtractor
 
 frame_id=0
 
+
 def find_vehicles(image, window_slider, features_extractor, scaler, model, debug_text=False,
                   save_boxes_in_x_range=(0, 600)):
+    '''
+    Extracts the features for windows and finds the windows which the model predicts to have a car. It also generates a
+    score for these windows, by linearly scaling the diff between the current probability and the minimum which we deem
+    acceptable. The minimum has a score of 1, and the maximum is set to be 5.
+    The reason for the scoring is, to make heatmap generation a bit more meaningful. The assumption is, that a window
+    with 100% certainty means a lot more than 1 with 85%, but a couple of these 85% certainty windows is as good as one
+    with 100%. This is especially useful in case of the videos where we want to make sure, that a 100% certain detection
+    is kept even if it's surrounded by frames which have no cars detected at the same spot or with much lower certainty.
+    :param image: the image. This will be converted to the right format.
+    :param window_slider: The window_slider. This is not used in the current version
+    :param features_extractor: Used to extract features from the whole image. Currently this is done using
+        extract_image_features_multiscale.
+    :param scaler: scaler to normalize the features. This has to be the one used when trainig the model, so that our
+        features are scaled appropriately.
+    :param model: the model to use for predicting cars vs. not cars from the features
+    :param debug_text: whether to pring debug text
+    :param save_boxes_in_x_range: This x range shouldn't have any windows with cars detected. If there's one, save it
+        so that it can be used for hard negative mining.
+    :return: the windows where cars are predicted and the score of the predictions.
+    '''
     start_time = time.time()
     luv = cv2.cvtColor(image, cv2.COLOR_BGR2LUV)
     features, windows = features_extractor.extract_image_features_multiscale(luv)
@@ -51,11 +72,13 @@ def find_vehicles(image, window_slider, features_extractor, scaler, model, debug
                     str(e) for e in np.array(window).flatten()) + '.png',
                     cv2.resize(image[window[0][1]:window[1][1], window[0][0]:window[1][0],:], (64, 64)))
 
-
     return car_windows, car_score
 
 
 def add_heat(heatmap, windows, scores):
+    '''
+    Adds heat at the windows based on the scores to the heatmap.
+    '''
     for i, window in enumerate(windows):
         heatmap[window[0][1]:window[1][1], window[0][0]:window[1][0]] += scores[i]
 
@@ -63,6 +86,11 @@ def add_heat(heatmap, windows, scores):
 
 
 def calculate_bounding_boxes(thres_heatmap):
+    '''
+    Calculates the bounding boxes of cars from the heatmap. The heatmap is expected to be thresholded. This method will
+    use a 10th percentile thresholding. The aim of this is to smooth out the boxes a bit but removing some "border"
+    around them.
+    '''
     nonzero_vals = thres_heatmap[thres_heatmap.nonzero()]
     if len(nonzero_vals) == 0:
         return []
@@ -87,6 +115,10 @@ def calculate_bounding_boxes(thres_heatmap):
 
 
 def draw_debug_windows(image, windows, thickness=1):
+    '''
+    Draws the given windows on a copy of the image. This is used to display all the windows which have been predicted of
+    having a car.
+    '''
     debug_image = np.copy(image)
     for window in windows:
         cv2.rectangle(debug_image, tuple(window[0]), tuple(window[1]), color=(0, 0, 255), thickness=thickness)
@@ -99,6 +131,10 @@ def normalize_heat_to_image(heatmap):
 
 def process_image(image, window_slider, features_extractor, model, scaler,
                   debug_windows=True, debug_heatmap=True, debug_id=0):
+    '''
+    Processes the image. This first finds all the windows with cars then generates a heatmap. The heatmap is then
+    thresholded and bounding boxes are calculated. Then these are drawn on the image.
+    '''
     windows, scores = find_vehicles(image, window_slider, features_extractor, scaler, model, debug_text=True)
     if debug_windows:
         cv2.imshow('Debug windows %s'%debug_id, draw_debug_windows(image, windows))
@@ -154,7 +190,13 @@ def process_test_images(path='./test_images', show_images=True):
 def process_video_image(window_slider, features_extractor, model, scaler, heatmap_history, image):
     '''
     Processes an image from the video. First it converts the image to BGR from RGB, because that's what the pipeline
-    uses.
+    uses. Then finds the windows with cars. Using these it generates a heatmap. The heatmap is augmented with the
+    previous 14 heatmaps, although with lower weights used the older the heatmap is. Then the heatmap is thresholded
+    for both min and max. In case of max, the value is set to be the threshold value. This is useful for bounding box
+    calculation, where we can do the 10th percentile thing (which is relative to all the bounding boxes, whereas the
+    thresholding here is absolute in the sense, that other areas are not taken into account).
+    After this bounding boxes are calculated and drawn on th output image. The detected windows and the raw and
+    thresholded heatmaps are overlayed in a pip like style, to see what the pipeline is doing.
     :return: The processed image.
     '''
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
@@ -227,12 +269,18 @@ def save_debug_video_frames(input_path, output_path, start, end, fps):
 
 
 def train_classifier(outpath='model.pkl'):
+    '''
+    Trains the classifier model and saves the resulting mode and scaler to a file.
+    '''
     model, scaler = train()
     with open(outpath, 'wb') as outfile:
         pickle.dump((model, scaler), outfile)
 
 
 def load_model(path='model.pkl'):
+    '''
+    Loads the model and scaler from file.
+    '''
     with open(path, 'rb') as infile:
         return pickle.load(infile)
 

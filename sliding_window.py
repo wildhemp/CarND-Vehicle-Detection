@@ -3,6 +3,10 @@ import cv2
 
 
 class WindowSlider:
+    '''
+    Windows slider to slide windows of given sizes with given overlapping percentages. This is not currently used,
+    because hog subsampling requires a different approach.
+    '''
 
     def __init__(self, window_sizes=(50, 100, 200, 300),
                  ranges_of_interest=(((300, 980), (400, 460)), ((0, 1280), (380, 520)),
