@@ -1,5 +1,3 @@
----
-
 **Vehicle Detection Project**
 
 [//]: # "Image References"
